@@ -192,6 +192,9 @@ def save_uploaded_video(video_id):
         uploaded.append(video_id)
         with open(UPLOADED_VIDEOS_FILE, 'w') as f:
             json.dump(uploaded, f, indent=2)
+        print(f'✅ Saved video ID {video_id} to tracking list')
+    else:
+        print(f'⚠️  Video ID {video_id} already in tracking list')
 
 
 def upload_video_to_youtube(youtube, video_path, title, description):
@@ -268,6 +271,9 @@ def process_and_upload():
         
         video_id = video['id']['videoId']
         
+        # Reload uploaded videos list to catch any just-added videos
+        uploaded_videos = load_uploaded_videos()
+        
         # Skip if already uploaded
         if video_id in uploaded_videos:
             print(f'Video {video_id} already uploaded, skipping...')
@@ -321,9 +327,12 @@ Creative Commons License
         )
         
         if uploaded_video_id:
+            # Save immediately to prevent duplicates
             save_uploaded_video(video_id)
+            # Reload list to include this video in next iteration
+            uploaded_videos = load_uploaded_videos()
             uploaded_count += 1
-            print(f'Successfully uploaded video {video_id}')
+            print(f'Successfully uploaded video {video_id} (original: {video_id}, new: {uploaded_video_id})')
         else:
             print(f'Failed to upload video {video_id}')
         
