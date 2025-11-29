@@ -134,20 +134,38 @@ def is_vertical_video(video_path):
 
 
 def download_video(video_url, output_path):
-    """Download video using yt-dlp."""
+    """Download video using yt-dlp with cookies and bot detection bypass."""
     try:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         cmd = [
             'yt-dlp',
+            '--extractor-args', 'youtube:player_client=default',  # Avoid JS runtime requirement
+            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            '--cookies-from-browser', 'chrome',  # Try Chrome first
             '-f', 'best[height<=1080]',  # Best quality up to 1080p
+            '--no-warnings',  # Reduce noise in output
             '-o', output_path,
             video_url
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return os.path.exists(output_path)
-    except subprocess.CalledProcessError as e:
-        print(f'Error downloading video: {e.stderr}')
-        return False
+    except subprocess.CalledProcessError:
+        # Try without cookies if Chrome cookies fail
+        try:
+            cmd = [
+                'yt-dlp',
+                '--extractor-args', 'youtube:player_client=default',
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                '-f', 'best[height<=1080]',
+                '--no-warnings',
+                '-o', output_path,
+                video_url
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            return os.path.exists(output_path)
+        except subprocess.CalledProcessError as e:
+            print(f'Error downloading video: {e.stderr}')
+            return False
 
 
 def load_uploaded_videos():
