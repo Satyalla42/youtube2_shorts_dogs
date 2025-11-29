@@ -50,6 +50,19 @@ jobs:
       run: |
         python3 upload_shorts.py
     
+    - name: Commit and push uploaded_videos.json
+      if: always()
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -f uploaded_videos.json
+        if git diff --staged --quiet; then
+          echo "No changes to uploaded_videos.json"
+        else
+          git commit -m "Update uploaded videos tracking [skip ci]" || exit 0
+          git push
+        fi
+    
     - name: Upload logs on failure
       if: failure()
       uses: actions/upload-artifact@v4

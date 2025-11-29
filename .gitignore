@@ -9,7 +9,7 @@ downloads/
 *.mkv
 
 # Upload tracking
-uploaded_videos.json
+# uploaded_videos.json - Now tracked in repo for GitHub Actions persistence
 
 # Python
 __pycache__/
