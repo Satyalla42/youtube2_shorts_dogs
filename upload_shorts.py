@@ -201,7 +201,12 @@ def upload_video_to_youtube(youtube, video_path, title, description):
             'snippet': {
                 'title': title,
                 'description': description,
-                'tags': ['shorts', 'creative commons', 'dogs'],
+                'tags': [
+                    'shorts', 'creative commons', 'dogs', 'dog', 'puppy', 'doglover', 
+                    'dogvideos', 'cutedog', 'doglife', 'doggo', 'pet', 'dogsofinstagram',
+                    'dogstagram', 'funny dogs', 'cute dogs', 'dog compilation', 'dog shorts',
+                    'puppies', 'dog content', 'dog videos', 'shorts dogs'
+                ],
                 'categoryId': '22'  # People & Blogs
             },
             'status': {
@@ -293,7 +298,20 @@ def process_and_upload():
             continue
         
         # Upload to YouTube
-        description = f'Original: {video_url}\n\nCreative Commons License'
+        # Popular dog hashtags for better discoverability
+        hashtags = [
+            '#dog', '#dogs', '#puppy', '#doglover', '#dogvideos', '#cutedog', 
+            '#doglife', '#doggo', '#pet', '#dogsofinstagram', '#dogstagram',
+            '#funnydogs', '#cutedogs', '#dogcompilation', '#dogshorts', 
+            '#puppies', '#dogcontent', '#dogvideos', '#shortsdogs'
+        ]
+        hashtag_string = ' '.join(hashtags)
+        
+        description = f'''Original: {video_url}
+
+Creative Commons License
+
+{hashtag_string}'''
         print(f'Uploading to YouTube...')
         uploaded_video_id = upload_video_to_youtube(
             youtube, 
