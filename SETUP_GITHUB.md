@@ -38,6 +38,19 @@ git push -u origin main
 - Value: Copy the entire contents of your `token.json` file (generate it first using `python3 generate_token.py` locally)
 - Click **Add secret**
 
+### Add YOUTUBE_COOKIES (Optional but Recommended):
+- Name: `YOUTUBE_COOKIES`
+- Value: Export cookies from your browser:
+  ```bash
+  # Using yt-dlp to export cookies from Chrome
+  yt-dlp --cookies-from-browser chrome --print-to-file cookies.txt ""
+  # Or manually export using a browser extension like "Get cookies.txt LOCALLY"
+  ```
+  Then copy the entire contents of `cookies.txt` to the secret
+- Click **Add secret**
+  
+  **Note:** This helps avoid YouTube bot detection. Without cookies, downloads may fail more often.
+
 ## Step 4: Enable GitHub Actions
 
 1. Go to **Actions** tab in your repository
