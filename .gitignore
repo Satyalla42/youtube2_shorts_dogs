@@ -1,0 +1,39 @@
+# OAuth credentials and tokens
+client_secret_*.json
+token.json
+
+# Downloaded videos
+downloads/
+*.mp4
+*.webm
+*.mkv
+
+# Upload tracking
+uploaded_videos.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+scheduler.log
+

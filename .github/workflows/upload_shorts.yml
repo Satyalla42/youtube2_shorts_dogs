@@ -1,0 +1,53 @@
+name: Upload Creative Commons Shorts
+
+on:
+  schedule:
+    # Run twice per day at 9:00 AM and 9:00 PM UTC
+    - cron: '0 9 * * *'   # 9:00 AM UTC
+    - cron: '0 21 * * *'   # 9:00 PM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Set up OAuth credentials
+      env:
+        CLIENT_SECRET_JSON: ${{ secrets.CLIENT_SECRET_JSON }}
+        TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
+      run: |
+        echo "$CLIENT_SECRET_JSON" > client_secret.json
+        echo "$TOKEN_JSON" > token.json
+    
+    - name: Run upload script
+      run: |
+        python3 upload_shorts.py
+    
+    - name: Upload logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-logs
+        path: |
+          *.log
+          uploaded_videos.json
+
