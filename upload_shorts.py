@@ -137,35 +137,44 @@ def download_video(video_url, output_path):
     """Download video using yt-dlp with cookies and bot detection bypass."""
     try:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        cmd = [
+        
+        # Base command options
+        base_opts = [
             'yt-dlp',
             '--extractor-args', 'youtube:player_client=default',  # Avoid JS runtime requirement
             '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            '--cookies-from-browser', 'chrome',  # Try Chrome first
             '-f', 'best[height<=1080]',  # Best quality up to 1080p
             '--no-warnings',  # Reduce noise in output
             '-o', output_path,
-            video_url
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return os.path.exists(output_path)
-    except subprocess.CalledProcessError:
-        # Try without cookies if Chrome cookies fail
-        try:
-            cmd = [
-                'yt-dlp',
-                '--extractor-args', 'youtube:player_client=default',
-                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                '-f', 'best[height<=1080]',
-                '--no-warnings',
-                '-o', output_path,
-                video_url
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return os.path.exists(output_path)
-        except subprocess.CalledProcessError as e:
-            print(f'Error downloading video: {e.stderr}')
-            return False
+        
+        # Try different cookie methods in order of preference
+        cookie_methods = [
+            # Method 1: Cookies from file (for GitHub Actions)
+            (['--cookies', 'cookies.txt'], os.path.exists('cookies.txt')),
+            # Method 2: Cookies from Chrome browser (for local use)
+            (['--cookies-from-browser', 'chrome'], True),
+            # Method 3: Cookies from Safari (macOS fallback)
+            (['--cookies-from-browser', 'safari'], True),
+            # Method 4: No cookies (last resort)
+            ([], True),
+        ]
+        
+        for cookie_opts, should_try in cookie_methods:
+            if not should_try:
+                continue
+            try:
+                cmd = base_opts + cookie_opts + [video_url]
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=300)
+                if os.path.exists(output_path):
+                    return True
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                continue  # Try next method
+        
+        return False
+    except Exception as e:
+        print(f'Error downloading video: {e}')
+        return False
 
 
 def load_uploaded_videos():

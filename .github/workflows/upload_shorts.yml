@@ -34,9 +34,14 @@ jobs:
       env:
         CLIENT_SECRET_JSON: ${{ secrets.CLIENT_SECRET_JSON }}
         TOKEN_JSON: ${{ secrets.TOKEN_JSON }}
+        YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
       run: |
         echo "$CLIENT_SECRET_JSON" > client_secret.json
         echo "$TOKEN_JSON" > token.json
+        # Optional: Set up YouTube cookies if provided
+        if [ -n "$YOUTUBE_COOKIES" ]; then
+          echo "$YOUTUBE_COOKIES" > cookies.txt
+        fi
     
     - name: Run upload script
       run: |
