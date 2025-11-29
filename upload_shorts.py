@@ -164,13 +164,28 @@ def download_video(video_url, output_path):
             if not should_try:
                 continue
             try:
+                method_name = 'cookies file' if '--cookies' in cookie_opts else \
+                            'Chrome browser' if 'chrome' in str(cookie_opts) else \
+                            'Safari browser' if 'safari' in str(cookie_opts) else \
+                            'no cookies'
+                print(f'  Trying download method: {method_name}')
+                
                 cmd = base_opts + cookie_opts + [video_url]
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=300)
                 if os.path.exists(output_path):
+                    print(f'  ✅ Download successful using {method_name}')
                     return True
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            except subprocess.CalledProcessError as e:
+                error_msg = e.stderr if e.stderr else e.stdout
+                # Only show error for last method to avoid spam
+                if cookie_methods[-1] == (cookie_opts, should_try):
+                    print(f'  ❌ Download failed: {error_msg[:200]}')
+                continue  # Try next method
+            except subprocess.TimeoutExpired:
+                print(f'  ⏱️  Download timeout using {method_name}')
                 continue  # Try next method
         
+        print(f'  ❌ All download methods failed')
         return False
     except Exception as e:
         print(f'Error downloading video: {e}')

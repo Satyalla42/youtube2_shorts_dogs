@@ -38,9 +38,12 @@ jobs:
       run: |
         echo "$CLIENT_SECRET_JSON" > client_secret.json
         echo "$TOKEN_JSON" > token.json
-        # Optional: Set up YouTube cookies if provided
+        # Set up YouTube cookies if provided
         if [ -n "$YOUTUBE_COOKIES" ]; then
           echo "$YOUTUBE_COOKIES" > cookies.txt
+          echo "✅ Cookies file created ($(wc -l < cookies.txt) lines)"
+        else
+          echo "⚠️  YOUTUBE_COOKIES secret not set - downloads may fail"
         fi
     
     - name: Run upload script
