@@ -213,7 +213,14 @@ def save_uploaded_video(video_id):
 
 
 def upload_video_to_youtube(youtube, video_path, title, description):
-    """Upload video to YouTube."""
+    """Upload video to YouTube.
+    
+    Returns:
+        tuple: (video_id, error_type) where error_type is:
+            - None if successful
+            - 'uploadLimitExceeded' if upload limit reached
+            - 'other' for other errors
+    """
     try:
         body = {
             'snippet': {
@@ -248,10 +255,25 @@ def upload_video_to_youtube(youtube, video_path, title, description):
                 print(f'Upload progress: {int(status.progress() * 100)}%')
         
         print(f'Video uploaded successfully! Video ID: {response["id"]}')
-        return response['id']
+        return (response['id'], None)
     except HttpError as e:
-        print(f'An error occurred during upload: {e}')
-        return None
+        error_details = e.error_details if hasattr(e, 'error_details') else []
+        error_reason = None
+        
+        # Check for specific error reasons
+        for detail in error_details:
+            if isinstance(detail, dict):
+                reason = detail.get('reason', '')
+                if reason == 'uploadLimitExceeded':
+                    error_reason = 'uploadLimitExceeded'
+                    print(f'❌ Upload limit exceeded: {detail.get("message", "The user has exceeded the number of videos they may upload.")}')
+                    break
+        
+        if error_reason != 'uploadLimitExceeded':
+            print(f'An error occurred during upload: {e}')
+            error_reason = 'other'
+        
+        return (None, error_reason)
 
 
 def process_and_upload():
@@ -279,9 +301,14 @@ def process_and_upload():
     
     uploaded_count = 0
     max_uploads_per_run = 2  # Upload 2 videos per run
+    upload_limit_reached = False
     
     for video in videos:
         if uploaded_count >= max_uploads_per_run:
+            break
+        
+        if upload_limit_reached:
+            print(f'\n⚠️  Upload limit reached. Stopping upload attempts.')
             break
         
         video_id = video['id']['videoId']
@@ -334,7 +361,7 @@ Creative Commons License
 
 {hashtag_string}'''
         print(f'Uploading to YouTube...')
-        uploaded_video_id = upload_video_to_youtube(
+        uploaded_video_id, error_type = upload_video_to_youtube(
             youtube, 
             output_path, 
             video_title,
@@ -348,6 +375,10 @@ Creative Commons License
             uploaded_videos = load_uploaded_videos()
             uploaded_count += 1
             print(f'Successfully uploaded video {video_id} (original: {video_id}, new: {uploaded_video_id})')
+        elif error_type == 'uploadLimitExceeded':
+            upload_limit_reached = True
+            print(f'⚠️  Upload limit exceeded. This account has reached its daily upload limit.')
+            print(f'   Please wait 24 hours or check your YouTube account limits.')
         else:
             print(f'Failed to upload video {video_id}')
         
