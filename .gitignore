@@ -2,6 +2,9 @@
 client_secret_*.json
 token.json
 
+# Cookies (sensitive, should not be committed)
+cookies.txt
+
 # Downloaded videos
 downloads/
 *.mp4

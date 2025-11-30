@@ -133,6 +133,53 @@ def is_vertical_video(video_path):
     return False
 
 
+def ensure_cookies_file():
+    """Automatically create cookies.txt from browser if it doesn't exist."""
+    cookies_file = 'cookies.txt'
+    
+    if os.path.exists(cookies_file):
+        return True  # Cookies file already exists
+    
+    print('⚠️  cookies.txt not found. Attempting to create it from browser...')
+    
+    # Try to extract cookies from browsers in order of preference
+    browsers = ['chrome', 'safari', 'firefox']
+    
+    for browser in browsers:
+        try:
+            print(f'  Trying to extract cookies from {browser}...')
+            # Use yt-dlp to extract cookies and save to file
+            cmd = [
+                'yt-dlp',
+                '--cookies-from-browser', browser,
+                '--cookies', cookies_file,
+                'https://www.youtube.com'
+            ]
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                timeout=30,
+                check=False  # Don't fail if this doesn't work
+            )
+            
+            if os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 0:
+                # Check if it contains YouTube cookies
+                with open(cookies_file, 'r') as f:
+                    content = f.read()
+                    if 'youtube.com' in content:
+                        print(f'  ✅ Successfully created cookies.txt from {browser}')
+                        return True
+            
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, Exception) as e:
+            continue  # Try next browser
+    
+    print('  ⚠️  Could not automatically create cookies.txt')
+    print('  💡 To create it manually, run:')
+    print('     yt-dlp --cookies-from-browser chrome --cookies cookies.txt "https://www.youtube.com"')
+    return False
+
+
 def download_video(video_url, output_path):
     """Download video using yt-dlp with cookies and bot detection bypass."""
     try:
@@ -282,6 +329,9 @@ def process_and_upload():
     
     # Ensure download directory exists
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    
+    # Ensure cookies file exists (for local use)
+    ensure_cookies_file()
     
     # Load list of already uploaded videos
     uploaded_videos = load_uploaded_videos()
